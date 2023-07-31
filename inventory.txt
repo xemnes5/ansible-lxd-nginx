@@ -1,0 +1,13 @@
+
+[staging]
+stage1	ansible_host=192.168.57.100
+
+[production]
+prod1	ansible_host=192.168.58.100
+
+[servers:children]
+staging
+production
+
+[container]
+nginx-host  ansible_host=192.168.58.100 

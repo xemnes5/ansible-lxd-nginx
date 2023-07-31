@@ -1,0 +1,20 @@
+
+---
+# Install Nginx on container
+- hosts: nginx-host
+  - name: Install Nginx on container
+    apt: 
+      name: nginx
+      state: latest
+      update_cache: yes
+
+  - name: Generate INDEX.HTML file
+    template: index.j2 dest=/var/www/html/index.html mode=0555
+    notify: Restart Nginx Container
+
+  - name: Copy MyHomePage to Nginx container
+    copy: src={{ item }} dest=/var/www/html mode=0555
+    loop:
+      - "fish.jpg"
+    notify: Restart Nginx Container
+

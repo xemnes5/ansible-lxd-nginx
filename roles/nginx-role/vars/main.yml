@@ -1,0 +1,5 @@
+
+---
+nginx_dest_path           : /var/www/html
+nginx_container_ip        : 172.20.20.10
+nginx_site_files          : ./files

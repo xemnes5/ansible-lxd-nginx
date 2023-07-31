@@ -1,0 +1,96 @@
+
+---
+# Remove old packages, install LXD and start it
+- name: Remove lxd packages
+  snap:
+    name: lxd
+    state: absent
+
+- name: Install lxd package
+  snap:
+    name: lxd
+    channel: latest/stable
+    state: present
+
+- name: Add user to lxd group
+  shell: adduser vagrant lxd
+
+- name: Reset connection
+  meta: reset_connection
+
+- name: create config file for lxd
+  template:
+    src: 'lxd_init.j2'
+    dest: './lxd_init.preseed'
+    mode: 0644
+
+- name: Start LXD
+  shell: lxd init --preseed < ./lxd_init.preseed
+
+
+# Create Container
+- name: Create container
+  lxd_container:
+    name: nginx-container
+    state: started
+    source:
+      type: image
+      mode: pull
+      server: https://images.linuxcontainers.org
+      protocol: simplestreams
+      alias: ubuntu/xenial/amd64
+    profiles: ["default"]
+    wait_for_ipv4_addresses: true
+    timeout: 600
+
+- name: Change ip to static
+  shell: lxc config device override nginx-container eth0 ipv4.address='{{nginx_prod_ip}}'
+  notify: Restart Nginx Container
+
+# Install openssh-server on container and copy key to root
+- name: Install SSHD on container
+  shell: |
+    lxc exec nginx-container -- apt-get update
+    lxc exec nginx-container -- apt-get install openssh-server -y
+
+- name: Create .ssh directory
+  shell: lxc exec nginx-container -- mkdir /root/.ssh
+
+- name: Copy admin user ssh-key to container
+  shell: lxc file push '{{ root_key }}' nginx-container/root/.ssh/authorized_keys
+
+# Install iptables-persistent and create rules
+- name: Install IPtables-persistent
+  apt:
+    name:
+      - iptables-persistent
+    update_cache: yes
+    state: present
+
+- name: Allow WEB traffic IPV4
+  iptables:
+    table: nat
+    chain: PREROUTING
+    destination: '{{ host_prod_ip }}'
+    destination_port: '8080'
+    protocol: tcp
+    to_destination: '{{ nginx_prod_ip }}:80'
+    jump: DNAT
+    comment: 'http forward for Nginx container'
+    action: append
+    state: present
+  notify: Save iptables
+
+- name: Allow SSH traffic IPV4
+  iptables:
+    table: nat
+    chain: PREROUTING
+    destination: '{{ host_prod_ip }}'
+    destination_port: '2222'
+    protocol: tcp
+    to_destination: '{{ nginx_prod_ip }}:22'
+    jump: DNAT
+    comment: 'ssh forward for Nginx container'
+    action: append
+    state: present
+  notify: Save iptables

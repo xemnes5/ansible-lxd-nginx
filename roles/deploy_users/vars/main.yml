@@ -1,0 +1,6 @@
+
+---
+admin_user       : odmin
+admin_user_key   : ../../users/odmin.pub
+simple_user      : pupa
+simple_user_key  : ../../users/pupa.pub

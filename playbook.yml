@@ -1,0 +1,21 @@
+
+---
+- name: Deploy users on all servers
+  hosts: servers
+  become: yes
+
+  roles:
+    - deploy_users
+
+- name: Deploy LXD and stuff
+  hosts: production
+  become: yes
+
+  roles:
+    - deploy_lxd_and_containers
+
+- name: Install Nginx on container
+  hosts: nginx-host
+  
+  roles:
+    - nginx-role

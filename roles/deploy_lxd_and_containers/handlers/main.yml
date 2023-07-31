@@ -1,0 +1,11 @@
+
+---
+- name: Restart Nginx Container
+  lxd_container:
+    name: nginx-container
+    state: restarted
+
+- name: Save iptables
+  shell: iptables-save > /etc/iptables/rules.v4
+  become: yes
+  become_user: root

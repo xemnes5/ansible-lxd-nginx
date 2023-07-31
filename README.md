@@ -1,6 +1,15 @@
 
 
-## 
+## First steps 
+- clone repo:
+```
+	git clone https://github.com/xemnes5/ansible-lxd-nginx ./
+```
+- fix messed up permissions:
+```
+	chmod 0600 users/odmin
+	chmod 0600 users/pupa
+```
 
 ## Usage
 
